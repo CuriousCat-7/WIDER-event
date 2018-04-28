@@ -5,27 +5,14 @@ from torchvision import transforms
 import torchvision.models as models
 import torch.nn.functional as F
 from torch.autograd import Variable
-
-class Model(nn.Module):
-    def __init__(self,):
-        super(Model, self).__init__()
-        self.resnet = models.resnet101(pretrained=True)
-        self.fc1 = nn.ModuleList([nn.Linear(1000,500), nn.Linear(1000,500)])
-        self.fc2 = nn.Linear(1000,61)
-    def forward(self,x):
-        for child in list(self.resnet.children())[:-1]:
-            x = child(x)
-        x = x.mean(-1).mean(-1)
-        a, a_idx = x.topk(k=1000, dim=-1)
-        a_idx = a_idx.float()
-        x = torch.cat([self.fc1[0](a), self.fc1[1](a_idx)],dim=-1)
-        x = self.fc2(x)
-
-        return x
+from models import TwoLinearModel
 
 config = {}
 config['batch_size']=32
 config['gpu']=1
+config['trainlist'] = '$HOME/data/WIDER_v0.1/train.lst'
+config['testlist'] = '$HOME/data/WIDER_v0.1/test.lst'
+config['model_name'] = 'twoLinearResnet101.save'
 
 trans = transforms.Compose(
     [
@@ -35,12 +22,12 @@ trans = transforms.Compose(
                                  std=[0.229, 0.224, 0.225]),
     ]
 )
-dataSet = ImageFilelist(root = './data', flist='/data/limingyao/eventRe/data/WIDER_v0.1/train.lst', transform = trans)
-testdataSet = ImageFilelist(root = './data', flist='/data/limingyao/eventRe/data/WIDER_v0.1/test.lst', transform = trans)
+dataSet = ImageFilelist(root = './data', flist=config['trainlist'], transform = trans)
+testdataSet = ImageFilelist(root = './data', flist=config['testlist'], transform = trans)
 dataloader = torch.utils.data.DataLoader(dataSet, batch_size = config['batch_size'], shuffle=True,)
 testdataloader = torch.utils.data.DataLoader(testdataSet, batch_size = config['batch_size'], shuffle=True,)
 cerit = F.cross_entropy
-net = Model()
+net = TwoLinearModel()
 print (net)
 net.cuda(config['gpu'])
 train_net = nn.ModuleList([net.fc1, net.fc2])
@@ -77,6 +64,6 @@ for epoch in range(25):
     loss = torch.stack(losses).mean()
     acc = torch.stack(acces).mean()
     print ("TEST in epoch{}, loss = {}, acc = {}%".format(epoch, loss, acc))
-    torch.save(net.state_dict(), 'model.save')
+    torch.save(net.state_dict(), '$HOME/data/models/'+ config['model_name'])
 
 
