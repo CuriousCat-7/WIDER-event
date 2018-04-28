@@ -28,7 +28,7 @@ trans = transforms.Compose(
 dataSet = ImageFilelist(root =config['data_root'], flist=config['trainlist'], transform = trans)
 testdataSet = ImageFilelist(root =config['data_root'] , flist=config['testlist'], transform = trans)
 dataloader = torch.utils.data.DataLoader(dataSet, batch_size = config['batch_size'], shuffle=True,)
-testdataloader = torch.utils.data.DataLoader(testdataSet, batch_size = config['batch_size'], shuffle=True,)
+testdataloader = torch.utils.data.DataLoader(testdataSet, batch_size = config['batch_size'], shuffle=True,num_workers=8)
 cerit = F.cross_entropy
 net = TwoLinearModel()
 print (net)
@@ -39,20 +39,20 @@ optim1 = torch.optim.Adam(nn.ModuleList(list(net.resnet.children())[:-1] ).param
 
 for epoch in range(25):
     # train
-#    net.train()
-#    for idx, (img, label) in enumerate(dataloader):
-#        img, label = Variable(img).cuda(config['gpu']), Variable(label).cuda(config['gpu'])
-#        pre = net(img)
-#        loss =cerit(pre, label)
-#        optim.zero_grad()
-#        optim1.zero_grad()
-#        loss.backward()
-#        optim.step()
-#        optim1.step()
-#        if idx%50==0:
-#            print ("TRAIN in epoch {} , step {}, loss = {}".format(epoch, idx, loss.data.cpu()[0]))
-#
-    # test
+    net.train()
+    for idx, (img, label) in enumerate(dataloader):
+        img, label = Variable(img).cuda(config['gpu']), Variable(label).cuda(config['gpu'])
+        pre = net(img)
+        loss =cerit(pre, label)
+        optim.zero_grad()
+        optim1.zero_grad()
+        loss.backward()
+        optim.step()
+        optim1.step()
+        if idx%50==0:
+            print ("TRAIN in epoch {} , step {}, loss = {}".format(epoch, idx, loss.data.cpu()[0]))
+
+   # test
     net.eval()
     losses = []
     acces = []
