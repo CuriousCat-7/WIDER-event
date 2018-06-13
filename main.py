@@ -48,9 +48,9 @@ from models import GateModel
 net = GateModel
 netname = type(net).__name__ + args.anotation
 
-net = net.to(device)
 if device == 'cuda':
     net = torch.nn.DataParallel(net)
+    net.cuda()
     cudnn.benchmark = True
 
 if args.resume:
