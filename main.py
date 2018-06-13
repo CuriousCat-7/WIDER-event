@@ -8,7 +8,6 @@ import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
 
 import torchvision
-import torchvision.transforms as transforms
 
 import os
 import argparse
@@ -35,7 +34,8 @@ start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
 # Data
 print('==> Preparing data..')
-from data import trainset, testset as _trainset, _testset
+from data import trainset as _trainset
+from data import testset as _testset
 trainset = _trainset(args.root, args.traintxt)
 testset = _testset(args.root, args.testtxt)
 

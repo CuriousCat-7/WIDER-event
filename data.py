@@ -1,5 +1,5 @@
 import torch.utils.data as data
-
+import torchvision.transforms as transforms
 from PIL import Image
 import os
 import os.path
@@ -48,7 +48,7 @@ class ImageFilelist(data.Dataset):
 
 transform_train = transforms.Compose([
     transforms.Resize([300,300]),
-    transforms.RandomCrop([224,224], )
+    transforms.RandomCrop([224,224]),
     transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406],
