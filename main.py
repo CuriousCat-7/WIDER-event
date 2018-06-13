@@ -1,5 +1,5 @@
 '''Train WIDER with PyTorch.'''
-om __future__ import print_function
+from __future__ import print_function
 
 import torch
 import torch.nn as nn
@@ -17,15 +17,16 @@ from models import *
 from utils import progress_bar
 
 homePath = os.environ['HOME']
+parser = argparse.ArgumentParser(description='PyTorch WIDER Training')
 parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
 parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
 parser.add_argument('--net', '-n', default='resnet18',type=str, help='define the name of the net')
 parser.add_argument('--epochs', '-e', default=30, type=int, help='total epochs')
 parser.add_argument('--batch_size', '-b', default=32, type=int)
-parser.add_argument('--root', 'r', default=homePath+'/data', type=str)
-parser.add_argument('--traintxt', 'tr', default=homePath+'/data/WIDER_v0.1/train.lst', type=str)
-parser.add_argument('--testtxt', 'te', default=homePath+'/data/WIDER_v0.1/test.lst', type=str)
-parser.add_argument('--anotation', 'a', default='', type=str)
+parser.add_argument('--root', '-ro', default=homePath+'/data', type=str)
+parser.add_argument('--traintxt', '-tr', default=homePath+'/data/WIDER_v0.1/train.lst', type=str)
+parser.add_argument('--testtxt', '-te', default=homePath+'/data/WIDER_v0.1/test.lst', type=str)
+parser.add_argument('--anotation', '-a', default='', type=str)
 args = parser.parse_args()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
