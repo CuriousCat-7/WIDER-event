@@ -46,3 +46,21 @@ class ImageFilelist(data.Dataset):
 	def __len__(self):
 		return len(self.imlist)
 
+transform_train = transforms.Compose([
+    transforms.Resize([300,300]),
+    transforms.RandomCrop([224,224], )
+    transforms.RandomHorizontalFlip(),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225]),
+])
+
+transform_test = transforms.Compose([
+    transforms.Resize([300,300]),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225]), 
+])
+trainset = lambda root, flist: ImageFilelist(root, flist, transform=transform_train)
+testset = lambda root, flist: ImageFilelist(root, flist, transform=transform_test)
+
