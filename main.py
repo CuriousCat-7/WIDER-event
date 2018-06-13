@@ -45,13 +45,11 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, sh
 # Model
 print('==> Building model..')
 from models import GateModel
-net = GateModel
+net = GateModel()
 netname = type(net).__name__ + args.anotation
 
 if device == 'cuda':
-    net = torch.nn.DataParallel(net)
     net.cuda()
-    cudnn.benchmark = True
 
 if args.resume:
     # Load checkpoint.
@@ -77,7 +75,7 @@ def train(epoch):
         inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
         outputs = net(inputs)
-        if isinstance(outputs, [list, tuple]):
+        if isinstance(outputs, (list, tuple)):
             loss = 0.0
             for out in outputs:
                 loss += criterion(out, targets)
@@ -87,7 +85,10 @@ def train(epoch):
         optimizer.step()
 
         train_loss += loss.item()
-        _, predicted = outputs.max(1)
+        if isinstance(outputs, (list, tuple)):
+            _,predicted = outputs[0].max(1)
+        else:
+            _, predicted = outputs.max(1)
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 

@@ -51,7 +51,7 @@ class GateModel(nn.Module):
                                  nn.Dropout(0.5),
                                  nn.Linear(100,61)
                                  )
-        self.fc2 = nn.Sequential(nn.Linear(2048, 100),
+        self.fc3 = nn.Sequential(nn.Linear(2048, 100),
                                  nn.ReLU(),
                                  nn.Dropout(0.5),
                                  nn.Linear(100,61)
@@ -63,14 +63,14 @@ class GateModel(nn.Module):
         fc1_out = self.fc1(feature)
         fc2_out = self.fc2(feature)
         fc3_out = self.fc3(feature)
-        fc_out = torch.stack(fc1_out.data, fc2_out.data, fc3_out.data, dim=-1) # shape N, 61, 3
+        fc_out = torch.stack([fc1_out.data, fc2_out.data, fc3_out.data], dim=-1) # shape N, 61, 3
         gate_out = gate_out.unsqueeze(1) # shape N, 1, 3
-        gate_output = fc_out.mul(gate_out).sum(-1) 
+        gate_output = fc_out.mul(gate_out).sum(-1)
         if not self.training:
             return gate_output
         # else
         return gate_output, fc1_out, fc2_out, fc3_out
-        
+
 
     def train_parameters(self):
         mo = nn.ModuleList([self.fc1, self.fc2, self.fc3, self.gate])
