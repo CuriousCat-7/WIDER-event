@@ -19,7 +19,7 @@ homePath = os.environ['HOME']
 parser = argparse.ArgumentParser(description='PyTorch WIDER Training')
 parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
 parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
-parser.add_argument('--net', '-n', default='resnet18',type=str, help='define the name of the net')
+parser.add_argument('--net', '-n', default='gatemodel',type=str, help='define the name of the net')
 parser.add_argument('--epochs', '-e', default=30, type=int, help='total epochs')
 parser.add_argument('--batch_size', '-b', default=32, type=int)
 parser.add_argument('--root', '-ro', default=homePath+'/data', type=str)
@@ -44,8 +44,11 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, sh
 
 # Model
 print('==> Building model..')
-from models import GateModel
-net = GateModel()
+from models import GateModel, GateModelBig
+if args.net == 'gatemodel':
+    net = GateModel()
+elif args.net == 'gatemodelbig':
+    net = GateModelBig()
 netname = type(net).__name__ + args.anotation
 
 if device == 'cuda':
