@@ -26,11 +26,14 @@ parser.add_argument('--root', '-ro', default=homePath+'/data', type=str)
 parser.add_argument('--traintxt', '-tr', default=homePath+'/data/WIDER_v0.1/train.lst', type=str)
 parser.add_argument('--testtxt', '-te', default=homePath+'/data/WIDER_v0.1/test.lst', type=str)
 parser.add_argument('--anotation', '-a', default='', type=str)
+parser.add_argument('--sgd', default=False, type=bool)
+parser.add_argument('--decay_step', default=-1, type=int)
+parser.add_argument('--decay_rate', default=0.1, type=float)
 args = parser.parse_args()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 best_acc = 0  # best test accuracy
-start_epoch = 0  # start from epoch 0 or last checkpoint epoch
+start_epoch = -1  # start from epoch 0 or last checkpoint epoch
 
 # Data
 print('==> Preparing data..')
@@ -65,11 +68,16 @@ if args.resume:
     checkpoint = torch.load('./checkpoint/'+netname+'.t7')
     net.load_state_dict(checkpoint['net'])
     best_acc = checkpoint['acc']
-    start_epoch = checkpoint['epoch']
+    start_epoch = checkpoint['epoch'] 
 
 criterion = nn.CrossEntropyLoss()
 #optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
-optimizer = optim.Adam(net.train_parameters(), lr=args.lr)
+if not args.sgd:
+    optimizer = optim.Adam(net.train_parameters(), lr=args.lr)
+else:
+    optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
+if args.decay_step>0:
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.decay_step, gamma=args.decay_rate, last_epoch=start_epoch)
 print(net)
 print ('training on {}, of net {}'.format(device, netname))
 
@@ -139,6 +147,8 @@ def test(epoch):
         best_acc = acc
 
 
-for epoch in range(start_epoch, start_epoch+ args.epochs):
+for epoch in range(start_epoch+1, start_epoch+ args.epochs):
+    if args.decay_step>0:
+        scheduler.step()	
     train(epoch)
     test(epoch)
