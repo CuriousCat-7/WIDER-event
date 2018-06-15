@@ -26,6 +26,7 @@ parser.add_argument('--root', '-ro', default=homePath+'/data', type=str)
 parser.add_argument('--traintxt', '-tr', default=homePath+'/data/WIDER_v0.1/train.lst', type=str)
 parser.add_argument('--testtxt', '-te', default=homePath+'/data/WIDER_v0.1/test.lst', type=str)
 parser.add_argument('--anotation', '-a', default='', type=str)
+parser.add_argument('--epoches', '-e', default=30, type=int, help='total epoches')
 args = parser.parse_args()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -130,6 +131,6 @@ def test(epoch):
         best_acc = acc
 
 
-for epoch in range(start_epoch, start_epoch+200):
+for epoch in range(start_epoch, start_epoch+ args.epoches):
     train(epoch)
     test(epoch)
