@@ -51,7 +51,7 @@ elif args.net == 'gatemodelbig':
     net = GateModelBig()
 elif args.net == 'gatemodelorigin':
     net = GateModelOrigin()
-elif arge.net == 'gatemodelmodified':
+elif args.net == 'gatemodelmodified':
     net = GateModelModified()
 netname = type(net).__name__ + args.anotation
 
@@ -70,6 +70,8 @@ if args.resume:
 criterion = nn.CrossEntropyLoss()
 #optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
 optimizer = optim.Adam(net.train_parameters(), lr=args.lr)
+print(net)
+print ('training on {}, of net {}'.format(device, netname))
 
 # Training
 def train(epoch):
