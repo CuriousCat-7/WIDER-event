@@ -44,11 +44,13 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, sh
 
 # Model
 print('==> Building model..')
-from models import GateModel, GateModelBig
+from models import GateModel, GateModelBig, GateModelOrigin
 if args.net == 'gatemodel':
     net = GateModel()
 elif args.net == 'gatemodelbig':
     net = GateModelBig()
+elif args.net == 'gatemodelorigin':
+    net = GateModelOrigin()
 netname = type(net).__name__ + args.anotation
 
 if device == 'cuda':

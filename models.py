@@ -135,3 +135,60 @@ class GateModelBig(nn.Module):
         net = []
         net = list(resnet.children())[:-1]
         return nn.Sequential(*net)
+
+class GateModelOrigin(nn.Module):
+    def __init__(self):
+        super(GateModelOrigin,self).__init__()
+        self.resnet = self.get_resnet()
+        self.gate = nn.Sequential(nn.Linear(2048,100),
+                                  nn.ReLU(),
+                                  nn.Linear(100,3),
+                                  nn.Softmax(dim=-1)
+                                  )
+        self.fc1 = nn.Sequential(nn.Linear(2048, 1000),
+                                 nn.Dropout(0.5),
+                                 nn.ReLU(),
+                                 nn.Linear(1000,1000)
+                                 )
+        self.fc2 = nn.Sequential(nn.Linear(2048, 1000),
+                                 nn.Dropout(0.5),
+                                 nn.ReLU(),
+                                 nn.Linear(1000,1000)
+                                 )
+        self.fc3 = nn.Sequential(nn.Linear(2048, 1000),
+                                 nn.Dropout(0.5),
+                                 nn.ReLU(),
+                                 nn.Linear(1000,1000)
+                                 )
+        self.classifier = nn.Sequential(
+                                        nn.Dropout(0.5),
+                                        nn.ReLU(),
+                                        nn.Linear(1000,61)
+                                        )
+    def forward(self,x):
+        x = self.resnet(x)
+        feature = x.mean(-1).mean(-1)
+        gate_out = self.gate(feature)
+        fc1_out = self.fc1(feature)
+        fc2_out = self.fc2(feature)
+        fc3_out = self.fc3(feature)
+        fc_out = torch.stack([fc1_out.data, fc2_out.data, fc3_out.data], dim=-1) # shape N, 1000, 3
+        gate_out = gate_out.unsqueeze(1) # shape N, 1, 3
+        gate_output = fc_out.mul(gate_out).sum(-1) #shape N 1000
+        if not self.training:
+            return self.classifier(gate_output)
+        # else
+        return map(self.classifier, [gate_output, fc1_out, fc2_out, fc3_out])
+
+
+    def train_parameters(self):
+        mo = nn.ModuleList([self.fc1, self.fc2, self.fc3, self.gate, self.classifier])
+        return mo.parameters()
+    def finetue_parameters(self):
+        return self.resnet.parameters()
+
+    def get_resnet(self):
+        resnet = models.resnet101(pretrained=True)
+        net = []
+        net = list(resnet.children())[:-1]
+        return nn.Sequential(*net)
