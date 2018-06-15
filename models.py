@@ -252,3 +252,17 @@ class GateModelModified(nn.Module):
         # else
         return self.classifier(gate_output), self.classifier1(fc1_out),\
                self.classifier2(fc2_out), self.classifier3(fc3_out)
+
+
+
+    def train_parameters(self):
+        mo = nn.ModuleList([self.fc1, self.fc2, self.fc3, self.gate, self.classifier])
+        return mo.parameters()
+    def finetue_parameters(self):
+        return self.resnet.parameters()
+
+    def get_resnet(self):
+        resnet = models.resnet101(pretrained=True)
+        net = []
+        net = list(resnet.children())[:-1]
+        return nn.Sequential(*net)
