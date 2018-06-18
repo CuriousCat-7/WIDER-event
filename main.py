@@ -53,6 +53,8 @@ elif args.net == 'gatemodelorigin':
     net = GateModelOrigin()
 elif args.net == 'gatemodelmodified':
     net = GateModelModified()
+elif args.net == 'originalmodel':
+    net = OriginalModel()
 netname = type(net).__name__ + args.anotation
 
 if device == 'cuda':

@@ -266,3 +266,41 @@ class GateModelModified(nn.Module):
         net = []
         net = list(resnet.children())[:-1]
         return nn.Sequential(*net)
+
+class OriginalModel(nn.Module):
+    def __init__(self):
+        super(OriginalModel,self).__init__()
+        self.resnet = self.get_resnet()
+        self.fc1 = nn.Sequential(nn.Linear(2048, 1000),
+                                 nn.Dropout(0.5),
+                                 nn.ReLU(),
+                                 nn.Linear(1000,1000)
+                                 )
+        self.fc2 = nn.Sequential(nn.Linear(2048, 1000),
+                                 nn.Dropout(0.5),
+                                 nn.ReLU(),
+                                 nn.Linear(1000,1000)
+                                 )
+        self.classifier = nn.Sequential(
+                                        nn.Dropout(0.5),
+                                        nn.ReLU(),
+                                        nn.Linear(1000,61)
+                                        )
+    def forward(self,x):
+        x = self.resnet(x)
+        feature = x.mean(-1).mean(-1)
+        fc1_out = self.fc1(feature)
+        fc2_out = self.fc2(feature)
+        return self.classfier(fc1_out + fc2_out)
+
+    def train_parameters(self):
+        mo = nn.ModuleList([self.fc1, self.fc2, self.classifier])
+        return mo.parameters()
+    def finetue_parameters(self):
+        return self.resnet.parameters()
+
+    def get_resnet(self):
+        resnet = models.resnet101(pretrained=True)
+        net = []
+        net = list(resnet.children())[:-1]
+        return nn.Sequential(*net)
