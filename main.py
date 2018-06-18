@@ -70,7 +70,7 @@ if args.resume:
     checkpoint = torch.load('./checkpoint/'+netname+'.t7')
     net.load_state_dict(checkpoint['net'])
     best_acc = checkpoint['acc']
-    start_epoch = checkpoint['epoch'] 
+    start_epoch = checkpoint['epoch']
 
 criterion = nn.CrossEntropyLoss()
 #optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
@@ -81,7 +81,7 @@ else:
 if args.decay_step>0:
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.decay_step, gamma=args.decay_rate, last_epoch=start_epoch)
 print(net)
-print ('training on {}, of net {}'.format(device, netname))
+print ('training on {}, of net {}, with lr {}, batch_size {}, sgd={}'.format(device, netname, args.lr, args.batch_size, args.sgd))
 
 # Training
 def train(epoch):
@@ -151,6 +151,6 @@ def test(epoch):
 
 for epoch in range(start_epoch+1, start_epoch+ args.epochs):
     if args.decay_step>0:
-        scheduler.step()	
+        scheduler.step()
     train(epoch)
     test(epoch)

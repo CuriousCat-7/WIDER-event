@@ -291,7 +291,7 @@ class OriginalModel(nn.Module):
         feature = x.mean(-1).mean(-1)
         fc1_out = self.fc1(feature)
         fc2_out = self.fc2(feature)
-        return self.classfier(fc1_out + fc2_out)
+        return self.classifier(fc1_out + fc2_out)
 
     def train_parameters(self):
         mo = nn.ModuleList([self.fc1, self.fc2, self.classifier])
