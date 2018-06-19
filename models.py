@@ -69,7 +69,7 @@ class GateModel(nn.Module):
         if not self.training:
             return gate_output
         # else
-        return gate_output, fc1_out, fc2_out, fc3_out
+        return gate_output, fc1_out, fc2_out, fc3_out, gate_out.squeeze(1)
 
 
     def train_parameters(self):
