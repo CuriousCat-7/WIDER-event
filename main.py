@@ -144,6 +144,7 @@ def test(epoch):
             'net': net.state_dict(),
             'acc': acc,
             'epoch': epoch,
+            'args': args,
         }
         if not os.path.isdir('checkpoint'):
             os.mkdir('checkpoint')
