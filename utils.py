@@ -143,7 +143,7 @@ def speicalize_train(ouputs, targets, criterion, args, device):
     gate_outs = ouputs[-1] # shape B, 3
     B, E = outs.shape
     corrfun = lambda out: targets.eq(out.max(1)[-1]) # size B for correct
-    corrs = torch.stack(map(corrfun, outs),dim=-1) #  list of corrrect vectors shape B,3
+    corrs = torch.stack(map(corrfun, [outs[i] for i in range(E)]),dim=-1) #  list of corrrect vectors shape B,3
     for i in range(B):
         corr = corrs[i] # shape 3
         out = outs[i] # shape 61,3
