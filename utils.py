@@ -8,8 +8,10 @@ import sys
 import time
 import math
 
+import torch
 import torch.nn as nn
 import torch.nn.init as init
+from torch.nn import functional as F
 
 
 def get_mean_and_std(dataset):
@@ -122,3 +124,61 @@ def format_time(seconds):
     if f == '':
         f = '0ms'
     return f
+
+def speicalize_train(ouputs, targets, criterion, args, device):
+    '''
+    outputs: list with [real_output, expert1_output, expert2_output ..., gate_output]
+    if any experts get right:
+        train the right experts to depress other wrong labels
+        train the gate expert to point to that experts 
+        do not care other experts
+
+    else:
+        train all experts
+        train the gate to equal ?
+    '''
+    loss = 0.0
+    gate_loss = 0.0
+    outs = torch.stack(ouputs[1:-1],dim=-1) # shape B,61,3
+    gate_outs = ouputs[-1] # shape B, 3
+    B, E = outs.shape
+    corrfun = lambda out: targets.eq(out.max(1)[-1]) # size B for correct
+    corrs = torch.stack(map(corrfun, outs),dim=-1) #  list of corrrect vectors shape B,3
+    for i in range(B):
+        corr = corrs[i] # shape 3
+        out = outs[i] # shape 61,3
+        gate_out = gate_outs[i] # shape 3
+        location = []
+        for j in range(E):
+            ou = out[:,j] # shape 61
+            cor = corr[j].itme()
+            if cor: # right, match
+                loss += criterion(ou, targets[i])
+                location.append(j)
+        if location is not []: # get right
+            eta = 1.0/len(location)
+            gate_template = torch.zeros(E)
+            for a in location:
+                gate_template[a] = eta
+            if device == 'cuda':
+                gate_template = gate_template.cuda()
+            gate_loss += F.mse_loss(gate_out, gate_template)
+        else: # all wrong
+            for j in range(E):
+                ou = out[:,j] # shape 61
+                cor = corr[j]
+                loss += criterion(ou, targets[i])
+            if args.gate_equal:
+                eta = 1.0/E
+                gate_template = torch.zeros(E).fill_(eta)
+                if device == 'cuda':
+                    gate_template = gate_template.cuda()
+                gate_loss += F.mse_loss(gate_out, gate_template)
+        return loss + gate_loss
+
+
+
+
+
+
+

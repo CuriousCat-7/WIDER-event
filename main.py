@@ -13,7 +13,7 @@ import os
 import argparse
 
 from models import *
-from utils import progress_bar
+from utils import progress_bar, speicalize_train
 
 homePath = os.environ['HOME']
 parser = argparse.ArgumentParser(description='PyTorch WIDER Training')
@@ -27,12 +27,15 @@ parser.add_argument('--traintxt', '-tr', default=homePath+'/data/WIDER_v0.1/trai
 parser.add_argument('--testtxt', '-te', default=homePath+'/data/WIDER_v0.1/test.lst', type=str)
 parser.add_argument('--anotation', '-a', default='', type=str)
 parser.add_argument('--sgd', default=False, type=bool)
+parser.add_argument('--speicalize_train', '-s', default=False, type=bool)
+parser.add_argument('--gate_equal', default=False, type=bool)
 parser.add_argument('--decay_step', default=-1, type=int)
 parser.add_argument('--decay_rate', default=0.1, type=float)
 args = parser.parse_args()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 best_acc = 0  # best test accuracy
+best_acc_top5 = 0  # best test top5 accuracy
 start_epoch = -1  # start from epoch 0 or last checkpoint epoch
 
 # Data
@@ -84,7 +87,8 @@ else:
 if args.decay_step>0:
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.decay_step, gamma=args.decay_rate, last_epoch=start_epoch)
 print(net)
-print ('training on {}, of net {}, with lr {}, batch_size {}, sgd={}'.format(device, netname, args.lr, args.batch_size, args.sgd))
+print ('training on {}, of net {}, with lr {}, batch_size {}, sgd={}, \
+speicalize_train={}'.format(device, netname, args.lr, args.batch_size, args.sgd, args.speicalize_train))
 
 # Training
 def train(epoch):
@@ -98,11 +102,15 @@ def train(epoch):
         optimizer.zero_grad()
         outputs = net(inputs)
         if isinstance(outputs, (list, tuple)):
-            loss = 0.0
-            for out in outputs:
-                loss += criterion(out, targets)
+            if args.speicalize_train:
+                loss = speicalize_train(ouputs, targets, criterion, args, device)
+            else:
+                loss = 0.0
+                for out in outputs[:-1]:
+                    loss += criterion(out, targets)
         else:
             loss = criterion(outputs, targets)
+
         loss.backward()
         optimizer.step()
 
@@ -148,7 +156,7 @@ def test(epoch):
         state = {
             'net': net.state_dict(),
             'acc': acc,
-            'acc_top5': acc_top5
+            'acc_top5': acc_top5,
             'epoch': epoch,
             'args': args,
         }

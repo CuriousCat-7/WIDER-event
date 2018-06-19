@@ -239,7 +239,7 @@ class GateModelOrigin(nn.Module):
         if not self.training:
             return self.classifier(gate_output)
         # else
-        return map(self.classifier, [gate_output, fc1_out, fc2_out, fc3_out])
+        return map(self.classifier, [gate_output, fc1_out, fc2_out, fc3_out,]).append(gate_out.squeeze(1))
 
 
     def train_parameters(self):
@@ -312,7 +312,7 @@ class GateModelModified(nn.Module):
             return self.classifier(gate_output)
         # else
         return self.classifier(gate_output), self.classifier1(fc1_out),\
-               self.classifier2(fc2_out), self.classifier3(fc3_out)
+               self.classifier2(fc2_out), self.classifier3(fc3_out), gate_out.squeeze(1)
 
 
 
