@@ -169,12 +169,14 @@ def speicalize_train(ouputs, targets, criterion, args, device):
                 ou = out[:,j] # shape 61
                 cor = corr[j]
                 loss += criterion(ou.unsqueeze(0), target.unsqueeze(0))
-            if args.gate_equal:
+            if args.gate_equal == 'equal':
                 eta = 1.0/E
                 gate_template = torch.zeros(E).fill_(eta)
                 if device == 'cuda':
                     gate_template = gate_template.cuda()
                 gate_loss += F.mse_loss(gate_out.unsqueeze(0), gate_template.unsqueeze(0))
+            elif args.gate_equal == 'origin':
+                gate_loss = F.cross_entropy(ouputs[0][i].unsqueeze(0) ,target.unsqueeze(0))
         return loss + gate_loss
 
 

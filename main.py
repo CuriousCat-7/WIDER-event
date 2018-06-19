@@ -28,7 +28,7 @@ parser.add_argument('--testtxt', '-te', default=homePath+'/data/WIDER_v0.1/test.
 parser.add_argument('--anotation', '-a', default='', type=str)
 parser.add_argument('--sgd', default=False, type=bool)
 parser.add_argument('--speicalize_train', '-s', default=False, type=bool)
-parser.add_argument('--gate_equal', default=False, type=bool)
+parser.add_argument('--gate_equal','-g', default='none', type=str) #none, equal, origin
 parser.add_argument('--decay_step', default=-1, type=int)
 parser.add_argument('--decay_rate', default=0.1, type=float)
 args = parser.parse_args()
