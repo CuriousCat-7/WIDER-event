@@ -72,6 +72,7 @@ if args.resume:
     checkpoint = torch.load('./checkpoint/'+netname+'.t7')
     net.load_state_dict(checkpoint['net'])
     best_acc = checkpoint['acc']
+    best_acc_top5 = checkpoint['acc_top5']
     start_epoch = checkpoint['epoch']
 
 criterion = nn.CrossEntropyLoss()
@@ -118,9 +119,11 @@ def train(epoch):
 
 def test(epoch):
     global best_acc
+    global best_acc_top5
     net.eval()
     test_loss = 0
     correct = 0
+    correct5 = 0
     total = 0
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
@@ -132,17 +135,20 @@ def test(epoch):
             _, predicted = outputs.max(1)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
+            correct5 += (targets.unsqueeze(-1) == outputs.topk(k=5)[-1]).sum().item()
 
-            progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
+            progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d) | Top5 Acc:%.3f%% (%d/%d)'
+                % (test_loss/(batch_idx+1), 100.*correct/total, correct, total, 100.*correct5/total, correct5, total))
 
     # Save checkpoint.
     acc = 100.*correct/total
+    acc_top5 = 100.*correct5/total
     if acc > best_acc:
         print('Saving..')
         state = {
             'net': net.state_dict(),
             'acc': acc,
+            'acc_top5': acc_top5
             'epoch': epoch,
             'args': args,
         }
@@ -150,6 +156,7 @@ def test(epoch):
             os.mkdir('checkpoint')
         torch.save(state, './checkpoint/'+netname+'.t7')
         best_acc = acc
+        best_acc_top5 = acc_top5
 
 
 for epoch in range(start_epoch+1, start_epoch+ args.epochs):
