@@ -130,7 +130,7 @@ def speicalize_train(ouputs, targets, criterion, args, device):
     outputs: list with [real_output, expert1_output, expert2_output ..., gate_output]
     if any experts get right:
         train the right experts to depress other wrong labels
-        train the gate expert to point to that experts 
+        train the gate expert to point to that experts
         do not care other experts
 
     else:
@@ -141,7 +141,7 @@ def speicalize_train(ouputs, targets, criterion, args, device):
     gate_loss = 0.0
     outs = torch.stack(ouputs[1:-1],dim=-1) # shape B,61,3
     gate_outs = ouputs[-1] # shape B, 3
-    B, E = outs.shape
+    B,_, E = outs.shape
     corrfun = lambda out: targets.eq(out.max(1)[-1]) # size B for correct
     corrs = torch.stack(map(corrfun, [outs[i] for i in range(E)]),dim=-1) #  list of corrrect vectors shape B,3
     for i in range(B):

@@ -103,7 +103,7 @@ def train(epoch):
         outputs = net(inputs)
         if isinstance(outputs, (list, tuple)):
             if args.speicalize_train:
-                loss = speicalize_train(ouputs, targets, criterion, args, device)
+                loss = speicalize_train(outputs, targets, criterion, args, device)
             else:
                 loss = 0.0
                 for out in outputs[:-1]:
