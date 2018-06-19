@@ -138,7 +138,7 @@ class GateModelBig(nn.Module):
 
 class GateModelHuge(nn.Module):
     def __init__(self):
-        super(GateModelBig,self).__init__()
+        super(GateModelHuge,self).__init__()
         self.resnet = self.get_resnet()
         self.gate = nn.Sequential(nn.Linear(2048,100),
                                   nn.ReLU(),
