@@ -129,6 +129,62 @@ def speicalize_train(ouputs, targets, criterion, args, device):
     '''
     outputs: list with [real_output, expert1_output, expert2_output ..., gate_output]
     if any experts get right:
+        train the right experts to depress other wrong labels -> loss with target
+        do not care other experts
+    else:
+        train all experts
+    train the gate output
+    '''
+    loss = 0.0
+    gate_loss = 0.0
+    real_output = outputs[0] # tensor of shape B,61
+    gate_output = ouputs[-1] # tensorf with shape B E
+    expert_outputs = torch.stack(ouputs[1:-1],dim=1) # list of shape B E 61
+    B,E = gate_output.shape
+    if device == 'cuda':
+        mask = torch.CUDATensor(B).fill_(0.0)
+    else:
+        mask = torch.zeros(B)
+    correct_mask = expert_outputs.data.max(dim=-1).eq(targets.data.view(B,1)).float() # shape B E, 1 for correct
+    correct_mask_sum = correct_mask.sum(dim=-1) #shape B
+    correct_mask = correct_mask.div(correct_mask_sum.unsqueeze(-1)) # shape B, E average
+    list_correct = []
+    list_incorrect = []
+    for i in range(B):
+        if correct_mask_sum[i] > 0:
+            list_correct.append([expert_outputs[i], targets[i], correct_mask[i]] )
+        else:
+            list_incorrect.append([expert_outputs[i], targets[i]] )
+    # for correct case
+    if list_correct:
+        e, t, c= zip(list_correct)
+        e = torch.stack(e)
+        t = torch.stack(t)
+        B1,_,_ = e.shape
+        for j in range(B1):
+            for i in range(E):
+                if c[j,i] > 0:
+                    e_buf = e[j,i,:].unsqueeze(0)
+                    t_buf = t[j].unsqueeze(0)
+                    loss += criterion(e_buf, t_buf)*c[j,i]
+
+    # for incorrect case
+    if list_incorrect:
+        e, t = zip(list_incorrect) 
+        e = torch.stack(e)
+        t = torch.stack(t)
+        B2 = e.shape
+        e = [e[:,i,:] for i in range(B2)]
+        for i in range(B2):
+            loss += criterion(e[i], t)
+    # then for the gate
+    loss += criterion(real_output, targets)
+    return loss
+
+def speicalize_train_old(ouputs, targets, criterion, args, device):
+    '''
+    outputs: list with [real_output, expert1_output, expert2_output ..., gate_output]
+    if any experts get right:
         train the right experts to depress other wrong labels
         train the gate expert to point to that experts
         do not care other experts
@@ -184,4 +240,5 @@ def speicalize_train(ouputs, targets, criterion, args, device):
 
 
 
-
+if __name__ == '__main__':
+    pass
